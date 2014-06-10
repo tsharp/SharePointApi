@@ -413,6 +413,8 @@ class SharePointApi {
 				}else{
 					$xml_options .= '<viewName>' . $view . '</viewName>';
 				}
+			} else {
+				$xml_options .= '<viewName />';
 			}
 		}
 
@@ -421,13 +423,26 @@ class SharePointApi {
 			$xml_options .= '<query><Query>' . $xml_query . '</Query></query>';
 		}
 
+		if (is_null($options)) {
+			$options = '
+				<IncludeMandatoryColumns>FALSE</IncludeMandatoryColumns>
+          		<ViewAttributes Scope="Recursive" />
+			';
+		}
+		
+		$list_tag = '<listName>' . $list_name . '</listName>';
+		
+		if(is_null($list_name)) {
+			$list_tag = '<listName />';
+		}
+		
 		/*
 		 * Setup basic XML for querying a SharePoint list.
 		 * If rowLimit is not provided SharePoint will default to a limit of 100 items.
 		 */
 		$CAML = '
 			<GetListItems xmlns="http://schemas.microsoft.com/sharepoint/soap/">
-				<listName>' . $list_name . '</listName>
+				' . $list_tag . '
 				<rowLimit>' . $limit . '</rowLimit>
 				' . $xml_options . '
 				<queryOptions xmlns:SOAPSDK9="http://schemas.microsoft.com/sharepoint/soap/" >
@@ -470,10 +485,30 @@ class SharePointApi {
 		return $this->read($listName, $limit, $query, $view, $sort, "<Folder>" . ($isLibrary ? '' : 'Lists/') . $listName . '/' . $folderName . "</Folder>" );
 	}
 
-	public function readFileMeta($listName, $folderName, $fileName) {
-		$query = new \SharePoint\Service\QueryObjectService($this);
-		$query->where('linkfilename', '=', $fileName);
-		return $this->read($listName, NULL, $query, NULL, NULL, "<Folder>" . '' . $listName . '/' . $folderName . "</Folder>" );
+	public function getItemByValue($listName, $field, $value, $fields = NULL) {
+		$query = $this->query($listName)->where($field, '=', $value);
+		
+		if (!is_null($fields)) {
+			$query->fields($fields);
+		}
+		
+		$results = $query->get();
+		
+		if(count($results) > 1) {
+			throw new Exception('Unable To Retrieve Document By Value!', 500);
+		}
+		
+		return $results[0];
+	}
+	
+	public function getItemByRelUrl($listName, $url, $fields = NULL) {
+		// URL Decode Will Cleanup Any Stray %20 and soforth
+		return $this->getItemByValue($listName, 'ServerUrl', urldecode($url), $fields);
+	}
+	
+	public function getItemByAbsUrl($listName, $url) {
+		// URL Decode Will Cleanup Any Stray %20 and soforth
+		return $this->getItemByValue($listName, 'EncodedAbsUrl', urldecode($url), $fields);
 	}
 	
 	/**

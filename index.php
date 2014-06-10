@@ -11,29 +11,29 @@
     require_once('SharePoint\Auth\SharePointOnlineAuth.php');
     require_once('SharePoint\Auth\StreamWrapperHttpAuth.php');
 
-    echo 'Before SharePoint ...';
-    $sp = new \SharePoint\SharePointApi('', '','', 'NTLM');
-    echo 'After SharePoint';
+    $sp = new \SharePoint\SharePointApi('http://sharepointsite', 'domain\\usernname','password', 'NTLM');
     
-    $results = $sp->read('Applicants');
+    $doc = $sp->getItemByAbsUrl('Applicants', 'http://sp2010dev.webfortis.com/Applicants/Test%20Document.pdf', 
+    	array( 
+    		'DOCHASH',
+    		'include_x0020_in_x0020_bundle',
+    		'EncodedAbsUrl'
+    	));   
     
-    // $file = $sp->readFileMeta('Applicants', '', 'Test Document.pdf');
-    
-    
-    $queried = $sp->query('Applicants')->where('ServerUrl', '=', '/Applicants/Test Folder/MARBIBM.TIF')->get();
-    $queried2 = $sp->query('Applicants')->where('EncodedAbsUrl', '=', '')->get();
-    
-    
-    foreach ($results as &$doc) {
-    	echo '<h2>' . $doc['fileref'] . '</h2>';
-    	echo '<div>';
-    	// ITERATE THROUGH VALUES
-    	foreach($doc as $key => $value) {
-    		echo $key . ' = ' . $value;
-    		echo '<br />';
-    	}
-    	echo '</div>';
-	}
+    echo '<h2>' . $doc['fileref'] . '</h2>';
+    // ITERATE THROUGH VALUES
+    echo '<table>';
+    echo '<th><tr>';
+    echo '<td>Field</td>';
+    echo '<td>Value</td>';
+    echo '</tr></th>';
+    foreach($doc as $key => $value) {
+    	echo '<tr>';
+    	echo '<td>' . $key . '</td>';
+    	echo '<td>' . $value . '</td>';
+    	echo '</tr>';
+    }
+    echo '</table>';
     
 ?>
 </body>
