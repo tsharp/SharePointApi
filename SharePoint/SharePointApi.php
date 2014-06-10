@@ -1,22 +1,24 @@
 <?php
-namespace Thybag;
+namespace SharePoint;
 
 /**
- * SharepointAPI
+ * SharePointApi
  *
  * Simple PHP API for reading/writing and modifying SharePoint list items.
  *
  * @author Carl Saggs
+ * @author Travis Sharp
  * @version 0.6.2
  * @licence MIT License
+ * @source: TODO
  * @source: http://github.com/thybag/PHP-SharePoint-Lists-API
  *
- * Tested against the sharepoint 2007 API
+ * Tested against the SharePoint 2010 & 2007 API
  *
  * WSDL file needed will be located at: sharepoint.url/subsite/_vti_bin/Lists.asmx?WSDL
  *
  * Usage:
- * $sp = new \Thybag\SharePointAPI('<username>','<password>','<path_to_WSDL>');
+ * $sp = new \SharePoint\SharePointApi('<path_to_WSDL>','<username>','<password>');
  *
  * Read:
  * $sp->read('<list_name>');
@@ -54,7 +56,7 @@ namespace Thybag;
  * $list->read(10);
  * $list->create(array('<col_name>' => '<col_value>','<col_name_2>' => '<col_value_2>'));
  */
-class SharePointAPI {
+class SharePointApi {
 	/**
 	 * Username for SP auth
 	 */
@@ -110,9 +112,9 @@ class SharePointAPI {
 	protected $soap_keep_alive = FALSE;
 
 	/**
-	 * SOAP version number (default: SOAP_1_1)
+	 * SOAP version number (default: SOAP_1_2)
 	 */
-	protected $soap_version = SOAP_1_1;
+	protected $soap_version = SOAP_1_2;
 
 	/**
 	 * Compression
@@ -138,18 +140,18 @@ class SharePointAPI {
 	 * @param string $spWsdl WSDL file for this set of lists ( sharepoint.url/subsite/_vti_bin/Lists.asmx?WSDL )
 	 * @param Whether to authenticate with NTLM
 	 */
-	public function __construct ($spUsername, $spPassword, $spWsdl, $mode = 'STANDARD') {
+	public function __construct ($sp_site, $spUsername, $spPassword, $mode = 'STANDARD') {
 		// Check if required class is found
 		assert(class_exists('SoapClient'));
 
 		// Set data from parameters in this class
 		$this->spUsername = $spUsername;
 		$this->spPassword = $spPassword;
-		$this->spWsdl     = $spWsdl;
+		$this->spWsdl     = rtrim($sp_site,"/") . '/_vti_bin/Lists.asmx?WSDL';
 
 		/*
 		 * General options
-		 * NOTE: You can set all these parameters, see class ExampleSharePointAPI for an example)
+		 * NOTE: You can set all these parameters, see class ExampleSharePointApi for an example)
 		 */
 		$options = array(
 			'trace'        => $this->soap_trace,
@@ -166,15 +168,17 @@ class SharePointAPI {
 			// Then set login data
 			$options['login']    = $this->spUsername;
 			$options['password'] = $this->spPassword;
+			$options['proxy_host'] = "127.0.0.1";
+			$options['proxy_port'] = 8888;
 		}
 
 		// Create new SOAP Client
 		try {
 			if ((isset($options['login'])) && ($mode == 'NTLM')) {
 				// If using authentication then use the custom SoapClientAuth class.
-				$this->soapClient = new \Thybag\Auth\SoapClientAuth($this->spWsdl, $options);
+				$this->soapClient = new \SharePoint\Auth\SoapClientAuth($this->spWsdl, $options);
 			} elseif($mode == 'SPONLINE'){
-				$this->soapClient = new \Thybag\Auth\SharePointOnlineAuth($this->spWsdl, $options);
+				$this->soapClient = new \SharePoint\Auth\SharePointOnlineAuth($this->spWsdl, $options);
 			} else {
 				$this->soapClient = new \SoapClient($this->spWsdl, $options);
 			}
@@ -389,7 +393,7 @@ class SharePointAPI {
 		$fields_xml = '';
 
 		// Setup Options
-		if ($query instanceof Service\QueryObjectService) {
+		if ($query instanceof \SharePoint\Service\QueryObjectService) {
 			$xml_query = $query->getCAML();
 			$xml_options = $query->getOptionCAML();
 		} else {
@@ -466,6 +470,12 @@ class SharePointAPI {
 		return $this->read($listName, $limit, $query, $view, $sort, "<Folder>" . ($isLibrary ? '' : 'Lists/') . $listName . '/' . $folderName . "</Folder>" );
 	}
 
+	public function readFileMeta($listName, $folderName, $fileName) {
+		$query = new \SharePoint\Service\QueryObjectService($this);
+		$query->where('linkfilename', '=', $fileName);
+		return $this->read($listName, NULL, $query, NULL, NULL, "<Folder>" . '' . $listName . '/' . $folderName . "</Folder>" );
+	}
+	
 	/**
 	 * Write
 	 * Create new item in a sharepoint list
@@ -686,10 +696,10 @@ class SharePointAPI {
 	 * Build query's as $sp->query('my_list')->where('score','>',15)->and_where('year','=','9')->get();
 	 *
 	 * @param List name / GUID number
-	 * @return \Thybag\Service\QueryObjectService
+	 * @return \SharePoint\Service\QueryObjectService
 	 */
 	public function query ($table) {
-		return new \Thybag\Service\QueryObjectService($table, $this);
+		return new \SharePoint\Service\QueryObjectService($table, $this);
 	}
 
 	/**
@@ -697,10 +707,10 @@ class SharePointAPI {
 	 * Create a simple Create, Read, Update, Delete Wrapper around a specific list.
 	 *
 	 * @param $list_name Name of list to provide CRUD for.
-	 * @return \Thybag\Service\ListService
+	 * @return \SharePoint\Service\ListService
 	 */
 	public function CRUD ($list_name) {
-		return new \Thybag\Service\ListService($list_name, $this);
+		return new \SharePoint\Service\ListService($list_name, $this);
 	}
 
 	/**
@@ -957,7 +967,7 @@ class SharePointAPI {
 	 * If you know the name of the item you wish to link to in the lookup field, this helper method
 	 * can be used to perform the lookup for you.
 	 *
-	 * @param $sp Active/current instance of sharepointAPI
+	 * @param $sp Active/current instance of SharePointApi
 	 * @param $name Name of item you wish lookup to reference
 	 * @param $list Name of list item lookup is linked to.
 	 *

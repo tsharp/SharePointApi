@@ -1,5 +1,5 @@
 <?php
-namespace Thybag\Service;
+namespace SharePoint\Service;
 
 /**
  * SP Query Object
@@ -49,9 +49,9 @@ class QueryObjectService {
 	 * Setup new query Object
 	 *
 	 * @param string $list_name List to Query
-	 * @param \Thybag\SharePointAPI $api Reference to SP API
+	 * @param \SharePoint\SharePointAPI $api Reference to SP API
 	 */
-	public function __construct ($list_name, \Thybag\SharePointAPI $api) {
+	public function __construct ($list_name, \SharePoint\SharePointApi $api) {
 		$this->list_name = $list_name;
 		$this->api = $api;
 	}

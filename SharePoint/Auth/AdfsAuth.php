@@ -1,14 +1,14 @@
 <?php
-namespace Thybag\Auth;
+namespace SharePoint\Auth;
 
 /**
  * SharePointOnlineAuth
  * Clone of the PHP SoapClient class, modified in order to allow transparent communication with
  * the SharePoint Online Web services.
  *
- * @package Thybag\Auth
+ * @package SharePoint\AdfsAuth
  */
-class SharePointOnlineAuth extends \SoapClient {
+class AdfsAuth extends \SoapClient {
 
 	// Authentication cookies
 	private $authCookies = false;
@@ -90,6 +90,8 @@ class SharePointOnlineAuth extends \SoapClient {
 
 		// Send request and grab returned xml
 		$result = $this->authCurl("https://login.microsoftonline.com/extSTS.srf", $xml);
+
+        print($result);
 
 		// Extract security token from XML
 		$xml = new \DOMDocument();

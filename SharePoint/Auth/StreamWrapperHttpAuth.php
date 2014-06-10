@@ -1,10 +1,10 @@
 <?php
-namespace Thybag\Auth;
+namespace SharePoint\Auth;
 
 /**
  * Class streamWrapperHttpAuth
  *
- * @package Thybag\Auth
+ * @package SharePoint
  */
 class StreamWrapperHttpAuth {
 

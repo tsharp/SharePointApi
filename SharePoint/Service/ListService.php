@@ -1,5 +1,5 @@
 <?php
-namespace Thybag\Service;
+namespace SharePoint\Service;
 
 /**
  * ListCRUD
@@ -25,9 +25,9 @@ class ListService {
 	 * Setup the new CRUD object
 	 *
 	 * @param string $list_name Name of List to use
-	 * @param \Thybag\SharePointAPI $api Reference to SharePoint API object.
+	 * @param \SharePoint\SharePointApi $api Reference to SharePoint API object.
 	 */
-	public function __construct ($list_name, \Thybag\SharePointAPI $api) {
+	public function __construct ($list_name, \SharePoint\SharePointApi $api) {
 		$this->api = $api;
 		$this->list_name = $list_name;
 	}
@@ -104,10 +104,10 @@ class ListService {
 	 * Query
 	 * Create a query against a list in sharepoint
 	 *
-	 * @return \Thybag\Service\QueryObjectService
+	 * @return \SharePoint\Service\QueryObjectService
 	 */
 	public function query () {
-		return new \Thybag\Service\QueryObjectService($this->list_name, $this->api);
+		return new \SharePoint\Service\QueryObjectService($this->list_name, $this->api);
 	}
 
 }

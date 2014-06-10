@@ -1,5 +1,5 @@
 <?php
-namespace Thybag\Auth;
+namespace SharePoint\Auth;
 
 /**
  *    SoapClientAuth for accessing Web Services protected by HTTP authentication
@@ -41,6 +41,31 @@ class SoapClientAuth extends \SoapClient {
 	public $Username = NULL;
 	public $Password = NULL;
 
+	function cache_wsdl($wsdl) {
+    	$ch = curl_init($wsdl);
+    	curl_setopt($ch, CURLOPT_HEADER, 0);
+    	curl_setopt($ch, CURLOPT_USERPWD, $this->Username . ':' . $this->Password);
+    	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+    	// curl_setopt($ch, CURLOPT_VERBOSE, true);
+    	curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+     	curl_setopt($ch, CURLOPT_UNRESTRICTED_AUTH , 1);
+		// Get headers too with this line
+		curl_setopt($ch, CURLOPT_HEADER, 0);
+		// For Fiddler Debugging
+		// curl_setopt($ch, CURLOPT_PROXY, '127.0.0.1:8888');
+		$result = curl_exec($ch);		
+		$info = curl_getinfo($ch);
+		curl_close($ch);
+		
+		if ($info['http_code'] >= 400)
+		      die("HTTP ERROR {$info['http_code']}");
+		      
+		$temp_file = tempnam(sys_get_temp_dir(), 'PCMedicsSharePoint');
+		file_put_contents($temp_file, $result);
+		return $temp_file;
+	}
+	
 	/**
 	 *
 	 * @param string $wsdl
@@ -50,21 +75,23 @@ class SoapClientAuth extends \SoapClient {
 		$wrappers = stream_get_wrappers();
 
 		stream_wrapper_unregister('http');
-		stream_wrapper_register('http', '\Thybag\Auth\StreamWrapperHttpAuth');
+		stream_wrapper_register('http', '\SharePoint\Auth\StreamWrapperHttpAuth');
 
 		if (in_array("https", $wrappers)) {
 			stream_wrapper_unregister('https');
-			stream_wrapper_register('https', '\Thybag\Auth\StreamWrapperHttpAuth');
+			stream_wrapper_register('https', '\SharePoint\Auth\StreamWrapperHttpAuth');
 		}
 
 		if ($options) {
 			$this->Username = $options['login'];
-			\Thybag\Auth\StreamWrapperHttpAuth::$Username = $this->Username;
+            \SharePoint\Auth\StreamWrapperHttpAuth::$Username = $this->Username;
 			$this->Password = $options['password'];
-			\Thybag\Auth\StreamWrapperHttpAuth::$Password = $this->Password;
+            \SharePoint\Auth\StreamWrapperHttpAuth::$Password = $this->Password;
 		}
 
-		parent::SoapClient($wsdl, ($options ? $options : array()));
+		$wsdl_file = $this->cache_wsdl($wsdl);
+		parent::SoapClient($wsdl_file, ($options ? $options : array()));
+		unlink($wsdl_file);
 
 		stream_wrapper_restore('http');
 		if (in_array("https", $wrappers)) stream_wrapper_restore('https');
@@ -87,7 +114,7 @@ class SoapClientAuth extends \SoapClient {
 			'User-Agent: PHP-SOAP',
 			'Content-Type: text/xml; charset=utf-8',
 			'SOAPAction: "' . $action . '"',
-			'Content-Length: ' . strlen($request),
+			
 			'Expect: 100-continue',
 			'Connection: Keep-Alive'
 		);
@@ -101,7 +128,9 @@ class SoapClientAuth extends \SoapClient {
 
 		curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 		curl_setopt($ch, CURLOPT_FAILONERROR, FALSE);
-		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
+		curl_setopt($ch, CURLOPT_UNRESTRICTED_AUTH , 1);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 
 		curl_setopt($ch, CURLOPT_USERPWD, $this->Username . ':' . $this->Password);
 		curl_setopt($ch, CURLOPT_SSLVERSION, 3);
@@ -112,6 +141,9 @@ class SoapClientAuth extends \SoapClient {
 		curl_setopt($ch, CURLOPT_VERBOSE, TRUE);
 		curl_setopt($ch, CURLOPT_CERTINFO, TRUE);
 
+		// For Fiddler Debugging
+		// curl_setopt($ch, CURLOPT_PROXY, '127.0.0.1:8888');
+		
 		$response = curl_exec($ch);
 
 		if (($info = curl_getinfo($ch)) && $info['http_code'] == 200) {
