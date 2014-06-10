@@ -1,27 +1,12 @@
-# PHP SharePoint Lists API
+# SharePoint List Api
 
-The **PHP SharePoint Lists API** is designed to make working with SharePoint Lists in PHP a less painful developer experience. Rather than messing around with SOAP and CAML requests, just include the SharePoint lists API in to your project and you should be good to go. This library is free for anyone to use and is licensed under the MIT license.
+The **SharePoint List Api** is designed to make working with SharePoint Lists in PHP a less painful developer experience. Rather than messing around with SOAP and CAML requests, just include the SharePoint lists API in to your project and you should be good to go. This library is free for anyone to use and is licensed under the MIT license.
 
-Using the PHP SharePoint Lists API, you can easily create, read, edit and delete from SharePoint list. The API also has support for querying list metadata and the list of lists.
+Using the PHP SharePoint List Api, you can easily create, read, edit and delete from SharePoint list. The API also has support for querying list metadata and the list of lists.
 
 Known to work with: SharePoint 2007 and SharePoint online (experimental).
 
 ### Usage Instructions
-
-#### Installation
-
-Download the WSDL file for the SharePoint Lists you want to interact with. This can normally be obtained at:
-    `sharepoint.url/subsite/_vti_bin/Lists.asmx?WSDL`
-
-If you are using [composer](http://getcomposer.org/), just add [thybag/php-sharepoint-lists-api](https://packagist.org/packages/thybag/php-sharepoint-lists-api) to your `composer.json` and run composer.
-
-    {
-        "require": {
-            "thybag/php-sharepoint-lists-api": "dev-master"
-        }
-    }
-
-If you are not using composer you can download a copy of the SharePointAPI files manually and include the top "SharePointAPI.php" class in your project.
 
 #### Creating SharePointAPI object
 
@@ -29,19 +14,18 @@ In order to use the PHP SharePoint Lists API you will need a valid user/service 
 
 For most SharePoint installations, you can create a new instance of the API using:
 
-    use Thybag\SharePointAPI;
-    $sp = new SharePointAPI('<username>', '<password>', '<path_to_WSDL>');
+    use SharePoint\SharePointApi;
+    $sp = new SharePointApi('<path to site>', '<username>', '<password>');
 
 If your installation requires NTLM Authentication, you can instead use:
 
-    use Thybag\SharePointAPI;
-    $sp = new SharePointAPI('<username>', '<password>', '<path_to_WSDL>', 'NTLM');
-
+    use SharePoint\SharePointApi;
+    $sp = new SharePointApi('<path to site>', '<username>', '<password>', 'NTLM');
+    
 SharePoint Online users must use:
 
-    use Thybag\SharePointAPI;
-    $sp = new SharePointAPI('<username>', '<password>', '<path_to_WSDL>', 'SPONLINE');
-
+    use SharePoint\SharePointApi;
+    $sp = new SharePointApi('<path to site>', '<username>', '<password>', 'SPONLINE');
 
 All methods return an Array by default. `SetReturnType` can be used to specify that results should be returned as objects instead.
 
@@ -109,6 +93,14 @@ or
 or
 
     $sp->query('<list_name>')->fields(array("favroite_cake", "favorite_animal")->limit(5)->get();
+
+###### To retrieve an item by a relative URL
+
+    $sp->getItemByRelUrl('<list_name>', '<relative url>', array("<fields>", "<fields>")); 
+
+###### To retrieve an item by an absolute URL
+
+    $sp->getItemByAbsUrl('<list_name>', '<absolute url>', array("<fields>", "<fields>")); 
 
 
 By default list item's are returned as arrays with lower case index's. If you would prefer the results to return as object's, before invoking any read operations use:
@@ -223,11 +215,11 @@ The PHP SharePoint API contains a number of helper methods to make it easier to 
 
 The dataTime method can either be passed a text based date
 
-     $date = \Thybag\SharepointApi::dateTime("2012-12-21");
+     $date = \SharePoint\SharepointApi::dateTime("2012-12-21");
 
 Or a unix timestamp
 
-    $date = \Thybag\SharepointApi::dateTime(time(), true);
+    $date = \SharePoint\SharepointApi::dateTime(time(), true);
 
 And will return a value which can be stored in to SharePoints DateTime fields without issue.
 
@@ -235,11 +227,11 @@ And will return a value which can be stored in to SharePoints DateTime fields wi
 
 The lookup data type in SharePoint is for fields that reference a row in another list. In order to correctly populate these values you will need to know the ID of the row the value needs to reference.
 
-    $value = \Thybag\SharepointApi::lookup('3','Pepperoni Pizza');
+    $value = \SharePoint\SharepointApi::lookup('3','Pepperoni Pizza');
 
 If you do not know the name/title of the value you are storing the method will work fine with just an ID (which SharePoint will also accept directly)
     
-    $value = \Thybag\SharepointApi::lookup('3');
+    $value = \SharePoint\SharepointApi::lookup('3');
 
 ###### Magic Lookup
 
