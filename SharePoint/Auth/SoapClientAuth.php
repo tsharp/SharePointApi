@@ -114,7 +114,6 @@ class SoapClientAuth extends \SoapClient {
 			'User-Agent: PHP-SOAP',
 			'Content-Type: text/xml; charset=utf-8',
 			'SOAPAction: "' . $action . '"',
-			
 			'Expect: 100-continue',
 			'Connection: Keep-Alive'
 		);
