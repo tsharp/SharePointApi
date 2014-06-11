@@ -137,7 +137,7 @@ class SoapClientAuth extends \SoapClient {
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-		curl_setopt($ch, CURLOPT_VERBOSE, TRUE);
+		// curl_setopt($ch, CURLOPT_VERBOSE, TRUE);
 		curl_setopt($ch, CURLOPT_CERTINFO, TRUE);
 
 		// For Fiddler Debugging

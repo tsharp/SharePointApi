@@ -506,7 +506,7 @@ class SharePointApi {
 		return $this->getItemByValue($listName, 'ServerUrl', urldecode($url), $fields);
 	}
 	
-	public function getItemByAbsUrl($listName, $url) {
+	public function getItemByAbsUrl($listName, $url, $fields = NULL) {
 		// URL Decode Will Cleanup Any Stray %20 and soforth
 		return $this->getItemByValue($listName, 'EncodedAbsUrl', urldecode($url), $fields);
 	}
